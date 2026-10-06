@@ -93,7 +93,7 @@
     <section class="intro">
       <h1>Electrical and Computer Engineering at Shiv Nadar Institution of Eminence</h1>
       <section id="contact" class="contact">
-        <canvas class="field" bind:this={canvases.contactField} aria-hidden="true"></canvas>
+        <canvas class="field" bind:this={canvases.contactGlow} aria-hidden="true"></canvas>
         <h2>Get in touch</h2>
         <div class="actions">
           <a href="mailto:{profile.email}" class="btn solid">Email</a>
@@ -124,7 +124,7 @@
           <span class="more">Learn more ›</span>
           <a href={featured.url} onclick={(e) => e.stopPropagation()}>View on GitHub ›</a>
         </div>
-        <canvas bind:this={canvases.forestFire} aria-hidden="true"></canvas>
+        <div class="simwrap feat"><canvas bind:this={canvases.forestFire} aria-hidden="true"></canvas></div>
         <span class="stack-meta">{featured.stack}</span>
       </div>
 
@@ -144,7 +144,7 @@
               <span class="more">Learn more ›</span>
               <a href={p.url} onclick={(e) => e.stopPropagation()}>View on GitHub ›</a>
             </div>
-            {#if p.sim}<canvas class="sim" bind:this={canvases[p.sim]} aria-hidden="true"></canvas>{/if}
+            {#if p.sim}<div class="simwrap"><canvas bind:this={canvases[p.sim]} aria-hidden="true"></canvas></div>{/if}
             <span class="stack-meta bottom">{p.stack}</span>
           </div>
         {/each}
@@ -284,7 +284,7 @@
     transition: background-color .3s, color .3s;
   }
   .contact h2 { position: relative; font-size: clamp(36px, 5.6vw, 64px); line-height: 1.0625; letter-spacing: -0.009em; white-space: nowrap; }
-  .contact canvas.field { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; margin: 0; pointer-events: none; }
+  .contact canvas.field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
   .actions { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
   .btn { display: inline-flex; align-items: center; box-sizing: border-box; height: 48px; padding: 0 26px; border: 1px solid var(--link); border-radius: 980px; color: var(--link); background: var(--card); font-size: 17px; }
   .btn:hover { text-decoration: none; background: var(--link); color: #fff; }
@@ -295,7 +295,7 @@
 
   .tile {
     display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
-    box-sizing: border-box; padding: 56px 32px 40px;
+    box-sizing: border-box; min-width: 0; padding: 56px 32px 40px;
     background: var(--card); border-radius: 28px; cursor: pointer; transition: background-color .3s;
   }
   .tile h3 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; letter-spacing: 0; text-wrap: balance; }
@@ -310,8 +310,9 @@
   .featured h3 { font-size: clamp(34px, 5vw, 56px); line-height: 1.07143; letter-spacing: -0.005em; max-width: 820px; }
   .featured .tagline { font-size: clamp(19px, 2.2vw, 24px); line-height: 1.16667; letter-spacing: 0.009em; max-width: 640px; }
   .featured .links { gap: 8px 32px; margin-top: 14px; }
-  canvas { display: block; width: 100%; max-width: 920px; height: 220px; margin-top: 40px; }
-  canvas.sim { max-width: none; height: 240px; margin-top: 32px; }
+  .simwrap { position: relative; width: 100%; min-width: 0; height: 240px; margin-top: 32px; }
+  .simwrap.feat { max-width: 920px; height: 220px; margin-top: 40px; }
+  .simwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .research { cursor: default; min-height: 0; gap: 14px; padding: 88px clamp(24px, 6vw, 96px); }
   .research h3 { font-size: clamp(30px, 4.2vw, 48px); line-height: 1.08349; letter-spacing: -0.003em; max-width: 820px; }

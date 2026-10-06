@@ -23,8 +23,9 @@ const Sims = (function () {
     const ctx = canvas.getContext('2d');
     let W = 0, H = 0, raf = 0, last = 0, visible = true, dead = false, pal = palette();
     const size = () => {
-      const w = canvas.clientWidth, h = canvas.clientHeight, d = window.devicePixelRatio || 1;
-      if (!w || !h) return false;
+      const w = canvas.clientWidth, h = canvas.clientHeight, d = Math.min(2, window.devicePixelRatio || 1);
+      if (!w || !h || w > 4000 || h > 4000) return false;
+      if (w === W && h === H) return true;
       W = w; H = h;
       canvas.width = Math.round(W * d); canvas.height = Math.round(H * d);
       ctx.setTransform(d, 0, 0, d, 0, 0);
@@ -594,7 +595,53 @@ const Sims = (function () {
     };
   }
 
-  return { mount, contactField, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState };
+
+  /* ---------- Contact: pointer-following light with a gentle 3D tilt ---------- */
+  function contactGlow() {
+    const rgba = (hex, a) => {
+      let h = String(hex).replace('#', '').trim();
+      if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      const n = parseInt(h, 16) || 0x2997ff;
+      return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+    };
+    let t = 0, W = 0, H = 0, px = null, py = null, tx = null, ty = null, rx = 0, ry = 0, el = null;
+    return {
+      attach(canvas) {
+        el = canvas.parentElement;
+        el.style.willChange = 'transform';
+        const move = e => { const r = canvas.getBoundingClientRect(); tx = e.clientX - r.left; ty = e.clientY - r.top; };
+        const leave = () => { tx = null; ty = null; };
+        el.addEventListener('pointermove', move); el.addEventListener('pointerleave', leave);
+        return () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); el.style.transform = ''; };
+      },
+      resize(w, h) { W = w; H = h; },
+      update(dt) {
+        t += dt;
+        const hover = tx !== null;
+        const gx = hover ? tx : W * (0.5 + 0.32 * Math.sin(t * 0.35)), gy = hover ? ty : H * (0.5 + 0.3 * Math.sin(t * 0.53 + 1));
+        if (px === null) { px = gx; py = gy; }
+        const k = Math.min(1, dt * (hover ? 7 : 1.5));
+        px += (gx - px) * k; py += (gy - py) * k;
+        const trx = hover ? (0.5 - ty / H) * 5 : 0, tryy = hover ? (tx / W - 0.5) * 7 : 0;
+        const kt = Math.min(1, dt * 6);
+        rx += (trx - rx) * kt; ry += (tryy - ry) * kt;
+        if (el) el.style.transform = `perspective(1400px) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg)`;
+      },
+      draw(ctx, w, h, p) {
+        const x = px === null ? w / 2 : px, y = py === null ? h / 2 : py;
+        const r = Math.max(w, h) * 0.6;
+        let g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, rgba(p.link, p.light ? 0.2 : 0.3)); g.addColorStop(0.45, rgba(p.link, p.light ? 0.07 : 0.1)); g.addColorStop(1, rgba(p.link, 0));
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+        const x2 = w - x * 0.7, y2 = h - y * 0.6, r2 = r * 0.7;
+        g = ctx.createRadialGradient(x2, y2, 0, x2, y2, r2);
+        g.addColorStop(0, rgba(p.fg, p.light ? 0.05 : 0.07)); g.addColorStop(1, rgba(p.fg, 0));
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      }
+    };
+  }
+
+  return { mount, contactField, contactGlow, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState };
 })();
 
 export default Sims;
