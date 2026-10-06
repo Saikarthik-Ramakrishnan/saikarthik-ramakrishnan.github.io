@@ -17,16 +17,25 @@
   });
 </script>
 
+<header>
+  <a href="#top" class="brand">{profile.name}</a>
+  <nav>
+    {#each nav as [id, label]}<a href="#{id}">{label}</a>{/each}
+    <button
+      class="theme"
+      onclick={() => apply(theme === 'dark' ? 'light' : 'dark')}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5" />
+        <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor" />
+      </svg>
+    </button>
+  </nav>
+</header>
+
 <div class="wrap">
-  <header>
-    <a href="#top" class="brand">{profile.name}</a>
-    <nav>
-      {#each nav as [id, label]}<a href="#{id}">{label}</a>{/each}
-      <button onclick={() => apply(theme === 'dark' ? 'light' : 'dark')}>
-        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-      </button>
-    </nav>
-  </header>
 
   <main id="top">
     <section class="intro">
@@ -103,11 +112,12 @@
     </section>
   </main>
 
-  <footer>
-    <span>Copyright © 2026 {profile.name}</span>
-    <a href="mailto:{profile.email}">{profile.email}</a>
-  </footer>
 </div>
+
+<footer>
+  <span>Copyright © 2026 {profile.name}</span>
+  <a href="mailto:{profile.email}">{profile.email}</a>
+</footer>
 
 <style>
   :global(html) {
@@ -133,10 +143,11 @@
   :global(a:hover) { text-decoration: underline; }
   p { margin: 0; text-wrap: pretty; }
 
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 22px; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 22px; }
   header {
     position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
     gap: 8px 24px; min-height: 48px; border-bottom: 1px solid var(--line);
+    padding: 0 max(22px, calc((100% - 1140px) / 2));
     background: var(--nav); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
   .brand { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg); }
@@ -144,7 +155,9 @@
   nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 28px; font-size: 12px; letter-spacing: -0.01em; }
   nav a, nav button { color: var(--fg); }
   nav a:hover, nav button:hover { text-decoration: none; opacity: .7; }
-  nav button { background: none; border: 0; padding: 12px 0; margin: 0; font: inherit; cursor: pointer; }
+  nav button { background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+  .theme { display: flex; align-items: center; justify-content: center; width: 32px; height: 44px; }
+  .theme svg { display: block; }
 
   main { display: flex; flex-direction: column; gap: 120px; padding: 96px 0 80px; }
   section { display: flex; flex-direction: column; gap: 40px; scroll-margin-top: 80px; }
@@ -186,7 +199,7 @@
   .skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px 40px; }
 
   footer {
-    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 20px 0 40px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 20px max(22px, calc((100% - 1140px) / 2)) 40px;
     border-top: 1px solid var(--line); font-size: 12px; line-height: 1.33337; letter-spacing: -0.01em; color: var(--fg3);
   }
   footer a { color: var(--fg3); }
