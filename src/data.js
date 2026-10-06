@@ -12,18 +12,19 @@ export const profile = {
 
 export const featured = {
   name: 'Cellular Automata FPGA Engine',
+  tagline: 'A parallel cellular automaton engine running entirely in FPGA logic.',
   desc: 'A cellular automaton engine implemented in Verilog, with dedicated logic for each cell so the entire grid updates in parallel on an FPGA. It models systems such as forest-fire spread and is controlled and monitored through a browser console.',
   stack: 'Verilog | FPGA | cocotb | Tang Primer 20K',
   url: gh + 'ca-fpga-engine'
 };
 
 export const projects = [
-  { name: 'CPCS: Passenger Counting', desc: 'A computer-vision system that counts passengers boarding and leaving a bus from a single door camera. It runs on an onboard edge device and records trip data to a reporting dashboard.', stack: 'Python | Computer vision | Edge | Orange Pi 5', url: gh + 'cpcs-prototype' },
-  { name: 'Darwin Board', desc: 'A self-calibrating analog hardware platform. It monitors its own output, optimizes its parameters in a closed loop, and recovers automatically from component faults.', stack: 'Python | Analog hardware', url: gh + 'darwin-board' },
-  { name: 'Phantom: Traffic-Jam Simulator', desc: 'An agent-based simulation of phantom traffic jams on a ring road, showing how a single autonomous vehicle can dampen stop-and-go waves. Calibrated for Indian mixed-vehicle traffic.', stack: 'JavaScript | Simulation | Web', url: gh + 'phantom-traffic' },
-  { name: 'Phantom Evolve', desc: 'An extension of the Phantom simulator that applies evolutionary game theory to study how driving strategies compete and spread across a population.', stack: 'HTML | Game theory | Web', url: gh + 'phantom-evolve-gametheory' },
-  { name: 'NeuroSensorOS LSM', desc: 'A lightweight operating system prototype for neuromorphic hardware, designed to facilitate the development and deployment of spiking neural network applications.', stack: 'Linux | Embedded | Neuromorphic', url: gh + 'neurosensoros-lsm' },
-  { name: 'SIH Burn-in Project', desc: 'An ML project focused on the burn-in testing of capacitors to ensure reliability and performance under stress . Built on a XgBoost Framework with Isolation forest.', stack: 'Hardware | Testing', url: gh + 'sih-burn-in-project' }
+  { name: 'CPCS: Passenger Counting', sim: 'cpcsDoor', tagline: 'Counting bus passengers from a single door camera.', desc: 'A computer-vision system that counts passengers boarding and leaving a bus from a single door camera. It runs on an onboard edge device and records trip data to a reporting dashboard.', stack: 'Python | Computer vision | Edge | Orange Pi 5', url: gh + 'cpcs-prototype' },
+  { name: 'Darwin Board', sim: 'darwinCircuit', tagline: 'Analog hardware that calibrates itself.', desc: 'A self-calibrating analog hardware platform. It monitors its own output, optimizes its parameters in a closed loop, and recovers automatically from component faults.', stack: 'Python | ESP32 | Analog hardware', url: gh + 'darwin-board' },
+  { name: 'Phantom: Traffic-Jam Simulator', sim: 'phantomRing', tagline: 'How stop-and-go waves form, and how one vehicle can dissolve them.', desc: 'An agent-based simulation of phantom traffic jams on a ring road, showing how a single autonomous vehicle can dampen stop-and-go waves. Calibrated for Indian mixed-vehicle traffic.', stack: 'JavaScript | Simulation | Web', url: gh + 'phantom-traffic' },
+  { name: 'Phantom Evolve', sim: 'evolveRing', tagline: 'Evolutionary game theory for driving strategies.', desc: 'An extension of the Phantom simulator that applies evolutionary game theory to study how driving strategies compete and spread across a population.', stack: 'HTML | Game theory | Web', url: gh + 'phantom-evolve-gametheory' },
+  { name: 'NeuroSensorOS LSM', sim: 'liquidState', tagline: 'Streaming change detection with a spiking liquid state machine.', desc: 'A research prototype that detects changes in streaming sensor data using a liquid state machine: a fixed 96-neuron spiking reservoir with a trained readout. On 64 held-out simulated subjects it reached 97.84% accuracy on noisy data.', stack: 'Python | NumPy | Spiking neural networks', url: gh + 'neurosensoros-lsm' },
+  { name: 'SIH Burn-in Project', tagline: 'Add a short tagline.', desc: 'Add a one-line description of this project.', stack: 'Stack', url: gh + 'sih-burn-in-project' }
 ];
 
 export const research = [
@@ -31,10 +32,10 @@ export const research = [
 ];
 
 export const experience = [
-  { when: 'Jul 2026 – now', title: 'Engineering Intern, SPowerZ Solutions', desc: 'Real-time computer-vision pipeline counting bus passengers from a doorway camera. Directional door-crossing logic on ByteTrack, deployed to Orange Pi 5 with SQLite logging and a reporting dashboard.' },
-  { when: '2025 – 2029', title: 'Shiv Nadar Institution of Eminence', desc: "B.Tech, Electrical & Computer Engineering. CGPA 8.55 (Year 1). Dean's List, Monsoon 2025." },
-  { when: 'Grades XI – XII', title: 'BVM Global, Perungudi', desc: 'CBSE Class XII: 93%. School topper in Artificial Intelligence (100%).' },
-  { when: 'Grades V – X', title: 'Vaels International School', desc: 'ICSE Class X: 96%. School 3rd rank in Science.' }
+  { when: 'Jul 2026 – now', title: 'Engineering Intern, SPowerZ Solutions', short: 'Real-time passenger counting on edge hardware.', desc: 'Real-time computer-vision pipeline counting bus passengers from a doorway camera. Directional door-crossing logic on ByteTrack, deployed to Orange Pi 5 with SQLite logging and a reporting dashboard.' },
+  { when: '2025 – 2029', title: 'Shiv Nadar Institution of Eminence', short: 'B.Tech, Electrical and Computer Engineering.', desc: "B.Tech, Electrical & Computer Engineering. CGPA 8.55 (Year 1). Dean's List, Monsoon 2025." },
+  { when: 'Grades XI – XII', title: 'BVM Global, Perungudi', short: 'CBSE Class XII, 93%.', desc: 'CBSE Class XII: 93%. School topper in Artificial Intelligence (100%).' },
+  { when: 'Grades V – X', title: 'Vaels International School', short: 'ICSE Class X, 96%.', desc: 'ICSE Class X: 96%. School 3rd rank in Science.' }
 ];
 
 export const skills = [
