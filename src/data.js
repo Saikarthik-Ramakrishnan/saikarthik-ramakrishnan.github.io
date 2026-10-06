@@ -22,8 +22,8 @@ export const projects = [
   { name: 'Darwin Board', desc: 'A self-calibrating analog hardware platform. It monitors its own output, optimizes its parameters in a closed loop, and recovers automatically from component faults.', stack: 'Python | Analog hardware', url: gh + 'darwin-board' },
   { name: 'Phantom: Traffic-Jam Simulator', desc: 'An agent-based simulation of phantom traffic jams on a ring road, showing how a single autonomous vehicle can dampen stop-and-go waves. Calibrated for Indian mixed-vehicle traffic.', stack: 'JavaScript | Simulation | Web', url: gh + 'phantom-traffic' },
   { name: 'Phantom Evolve', desc: 'An extension of the Phantom simulator that applies evolutionary game theory to study how driving strategies compete and spread across a population.', stack: 'HTML | Game theory | Web', url: gh + 'phantom-evolve-gametheory' },
-  { name: 'NeuroSensorOS LSM', desc: 'Add a one-line description of this project.', stack: 'Stack', url: gh + 'neurosensoros-lsm' },
-  { name: 'SIH Burn-in Project', desc: 'Add a one-line description of this project.', stack: 'Stack', url: gh + 'sih-burn-in-project' }
+  { name: 'NeuroSensorOS LSM', desc: 'A lightweight operating system prototype for neuromorphic hardware, designed to facilitate the development and deployment of spiking neural network applications.', stack: 'Linux | Embedded | Neuromorphic', url: gh + 'neurosensoros-lsm' },
+  { name: 'SIH Burn-in Project', desc: 'An ML project focused on the burn-in testing of capacitors to ensure reliability and performance under stress . Built on a XgBoost Framework with Isolation forest.', stack: 'Hardware | Testing', url: gh + 'sih-burn-in-project' }
 ];
 
 export const research = [
