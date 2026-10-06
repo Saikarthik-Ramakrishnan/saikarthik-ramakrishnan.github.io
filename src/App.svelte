@@ -93,6 +93,7 @@
     <section class="intro">
       <h1>Electrical and Computer Engineering at Shiv Nadar Institution of Eminence</h1>
       <section id="contact" class="contact">
+        <canvas class="field" bind:this={canvases.contactField} aria-hidden="true"></canvas>
         <h2>Get in touch</h2>
         <div class="actions">
           <a href="mailto:{profile.email}" class="btn solid">Email</a>
@@ -278,13 +279,14 @@
   .eyebrow { font-size: 17px; line-height: 1.23536; font-weight: 600; letter-spacing: -0.022em; }
 
   .contact {
-    flex-direction: column; align-items: center; text-align: center; gap: 20px;
-    padding: 48px 32px; background: var(--card); color: var(--fg); border-radius: 18px;
+    position: relative; overflow: hidden; flex-direction: column; align-items: center; text-align: center; gap: 28px;
+    padding: clamp(72px, 10vw, 120px) 32px; background: var(--card); color: var(--fg); border-radius: 28px;
     transition: background-color .3s, color .3s;
   }
-  .contact h2 { font-size: 24px; line-height: 1.16667; letter-spacing: 0.009em; white-space: nowrap; }
-  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
-  .btn { display: inline-flex; align-items: center; box-sizing: border-box; height: 44px; padding: 0 22px; border: 1px solid var(--link); border-radius: 980px; color: var(--link); font-size: 17px; }
+  .contact h2 { position: relative; font-size: clamp(36px, 5.6vw, 64px); line-height: 1.0625; letter-spacing: -0.009em; white-space: nowrap; }
+  .contact canvas.field { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; margin: 0; pointer-events: none; }
+  .actions { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .btn { display: inline-flex; align-items: center; box-sizing: border-box; height: 48px; padding: 0 26px; border: 1px solid var(--link); border-radius: 980px; color: var(--link); background: var(--card); font-size: 17px; }
   .btn:hover { text-decoration: none; background: var(--link); color: #fff; }
   .solid { background: #0071e3; color: #fff; border-color: #0071e3; }
   .solid:hover { background: #0077ed; border-color: #0077ed; }

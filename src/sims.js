@@ -40,6 +40,7 @@ const Sims = (function () {
       if (!visible || !W) return;
       sim.update(dt); paint();
     };
+    const detach = sim.attach ? sim.attach(canvas) : null;
     size();
     if (reduced && sim.warm) sim.warm();
     if (W) paint();
@@ -50,7 +51,7 @@ const Sims = (function () {
     io.observe(canvas);
     const mo = new MutationObserver(() => { pal = palette(); if (W) paint(); });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return { stop() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); mo.disconnect(); } };
+    return { stop() { if (detach) detach(); dead = true; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); mo.disconnect(); } };
   }
 
   /* ---------- Cellular automaton: Drossel–Schwabl forest fire ---------- */
@@ -555,7 +556,45 @@ const Sims = (function () {
     };
   }
 
-  return { mount, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState };
+
+  /* ---------- Contact: rippling dot field that lights up under the pointer ---------- */
+  function contactField() {
+    const S = 16;
+    let t = 0, px = -999, py = -999, tx = -999, ty = -999, el = null, onMove, onLeave;
+    return {
+      attach(canvas) {
+        el = canvas.parentElement;
+        onMove = e => { const r = canvas.getBoundingClientRect(); tx = e.clientX - r.left; ty = e.clientY - r.top; if (px < -900) { px = tx; py = ty; } };
+        onLeave = () => { tx = -999; ty = -999; };
+        el.addEventListener('pointermove', onMove); el.addEventListener('pointerleave', onLeave);
+        return () => { el.removeEventListener('pointermove', onMove); el.removeEventListener('pointerleave', onLeave); };
+      },
+      update(dt) {
+        t += dt;
+        if (tx < -900) { px = -999; py = -999; } else { px += (tx - px) * Math.min(1, dt * 10); py += (ty - py) * Math.min(1, dt * 10); }
+      },
+      draw(ctx, W, H, p) {
+        const cols = Math.ceil(W / S) + 1, rows = Math.ceil(H / S) + 1, ox = (W - (cols - 1) * S) / 2, oy = (H - (rows - 1) * S) / 2;
+        const base = new Path2D();
+        ctx.fillStyle = p.link;
+        for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+          const cx = ox + x * S, cy = oy + y * S;
+          const wave = 0.5 + 0.5 * Math.sin(cx * 0.018 + t * 0.9) * Math.cos(cy * 0.03 - t * 0.6);
+          const d = Math.hypot(cx - px, cy - py), near = d < 150 ? 1 - d / 150 : 0;
+          if (near > 0.02) {
+            ctx.globalAlpha = 0.15 + 0.75 * near * near;
+            ctx.beginPath(); ctx.arc(cx, cy, 1.4 + 1.8 * near + wave * 0.6, 0, TAU2); ctx.fill();
+          } else {
+            const r = 1.1 + wave * 0.9;
+            base.moveTo(cx + r, cy); base.arc(cx, cy, r, 0, TAU2);
+          }
+        }
+        ctx.globalAlpha = 0.16; ctx.fillStyle = p.fg; ctx.fill(base); ctx.globalAlpha = 1;
+      }
+    };
+  }
+
+  return { mount, contactField, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState };
 })();
 
 export default Sims;
