@@ -596,7 +596,7 @@ const Sims = (function () {
   }
 
 
-  /* ---------- Contact: pointer-following light with a gentle 3D tilt ---------- */
+  /* ---------- Ambient blue light drifting slowly behind a panel ---------- */
   function contactGlow() {
     const rgba = (hex, a) => {
       let h = String(hex).replace('#', '').trim();
@@ -604,44 +604,161 @@ const Sims = (function () {
       const n = parseInt(h, 16) || 0x2997ff;
       return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
     };
-    let t = 0, W = 0, H = 0, px = null, py = null, tx = null, ty = null, rx = 0, ry = 0, el = null;
+    let W = 0, H = 0, px = null, py = null;
     return {
-      attach(canvas) {
-        el = canvas.parentElement;
-        el.style.willChange = 'transform';
-        const move = e => { const r = canvas.getBoundingClientRect(); tx = e.clientX - r.left; ty = e.clientY - r.top; };
-        const leave = () => { tx = null; ty = null; };
-        el.addEventListener('pointermove', move); el.addEventListener('pointerleave', leave);
-        return () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerleave', leave); el.style.transform = ''; };
-      },
       resize(w, h) { W = w; H = h; },
-      update(dt) {
-        t += dt;
-        const hover = tx !== null;
-        const gx = hover ? tx : W * (0.5 + 0.32 * Math.sin(t * 0.35)), gy = hover ? ty : H * (0.5 + 0.3 * Math.sin(t * 0.53 + 1));
-        if (px === null) { px = gx; py = gy; }
-        const k = Math.min(1, dt * (hover ? 7 : 1.5));
-        px += (gx - px) * k; py += (gy - py) * k;
-        const trx = hover ? (0.5 - ty / H) * 5 : 0, tryy = hover ? (tx / W - 0.5) * 7 : 0;
-        const kt = Math.min(1, dt * 6);
-        rx += (trx - rx) * kt; ry += (tryy - ry) * kt;
-        if (el) el.style.transform = `perspective(1400px) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg)`;
+      update() {
+        const t = performance.now() / 1000;
+        px = W * (0.5 + 0.3 * Math.sin(t * 0.12));
+        py = H * (0.5 + 0.25 * Math.sin(t * 0.17 + 1));
       },
+      warm() { this.update(0); },
       draw(ctx, w, h, p) {
         const x = px === null ? w / 2 : px, y = py === null ? h / 2 : py;
-        const r = Math.max(w, h) * 0.6;
+        const r = Math.max(w, h) * 0.75;
         let g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, rgba(p.link, p.light ? 0.2 : 0.3)); g.addColorStop(0.45, rgba(p.link, p.light ? 0.07 : 0.1)); g.addColorStop(1, rgba(p.link, 0));
+        g.addColorStop(0, rgba(p.link, p.light ? 0.09 : 0.14)); g.addColorStop(0.5, rgba(p.link, p.light ? 0.035 : 0.05)); g.addColorStop(1, rgba(p.link, 0));
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
         const x2 = w - x * 0.7, y2 = h - y * 0.6, r2 = r * 0.7;
         g = ctx.createRadialGradient(x2, y2, 0, x2, y2, r2);
-        g.addColorStop(0, rgba(p.fg, p.light ? 0.05 : 0.07)); g.addColorStop(1, rgba(p.fg, 0));
+        g.addColorStop(0, rgba(p.fg, p.light ? 0.03 : 0.04)); g.addColorStop(1, rgba(p.fg, 0));
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
       }
     };
   }
 
-  return { mount, contactField, contactGlow, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState };
+  /* ---------- Leakage Lens: burn-in leakage trajectories, screened at 24 h (sih-burn-in-project synthetic.py) ---------- */
+  function burnIn() {
+    const rng = mulberry32(26170);
+    const gauss = () => { let u = 0; while (!u) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU2 * rng()); };
+    const HRS = [0, 6, 12, 24, 48, 72, 96, 120, 144, 168], LIM = 50, NOM = 10, YMAX = 80, N = 40, ERR = 0.136 * LIM;
+    const T1 = 1.8, T2 = T1 + 2.2, T3 = T2 + 5, T4 = T3 + 2.8, T5 = T4 + 0.7;
+    const med = a => { const b = [...a].sort((x, y) => x - y), k = b.length >> 1; return b.length % 2 ? b[k] : (b[k - 1] + b[k]) / 2; };
+    const rz = a => { const m = med(a), d = med(a.map(x => Math.abs(x - m))) * 1.4826 || 1e-9; return a.map(x => (x - m) / d); };
+    const scen = () => { const r = rng(); return r < 0.08 ? 'gradual' : r < 0.15 ? 'accel' : r < 0.20 ? 'step' : r < 0.24 ? 'inter' : r < 0.28 ? 'fault' : r < 0.28 + 0.72 * 50 / 72 ? 'stable' : 'noise'; };
+    let parts = [], batch = 0, temp = 125, nFlag = 0, nRev = 0, t = 0;
+    const newBatch = () => {
+      batch = batch % 6 + 1; temp = Math.round((125 + rng() * 5 - 2.5) * 10) / 10;
+      const acc = Math.exp(0.7 / 8.617333e-5 * (1 / 398.15 - 1 / (temp + 273.15)));
+      parts = [];
+      for (let i = 0; i < N; i++) {
+        const sc = scen(), init = NOM * Math.exp(0.08 * gauss()) * acc;
+        const base = HRS.map(h => init * (1 + 0.05 * (1 - Math.exp(-h / 12))));
+        let v = base.slice(), nf = 0.02;
+        if (sc === 'noise') nf = 0.06;
+        else if (sc === 'gradual' || sc === 'accel') {
+          const em = sc === 'gradual' ? 0.95 + 0.45 * rng() : 1 + 0.6 * rng(), pw = sc === 'gradual' ? 0.95 + 0.15 * rng() : 1.8 + 1.2 * rng();
+          const amp = (LIM * em - base[9]) * acc;
+          v = base.map((b, k) => b + amp * Math.pow(HRS[k] / 168, pw));
+        } else if (sc === 'step') {
+          const sh = HRS[1 + Math.floor(rng() * 8)], st = LIM * (0.35 + 0.85 * rng()) * acc;
+          v = base.map((b, k) => b + (HRS[k] >= sh ? st : 0));
+        } else if (sc === 'inter') {
+          nf = 0.04;
+          const n = 1 + Math.floor(rng() * 3);
+          for (let j = 0; j < n; j++) v[1 + Math.floor(rng() * 9)] += LIM * (0.3 + 0.8 * rng()) * acc;
+        }
+        v = v.map((x, k) => x + gauss() * nf * base[k]);
+        if (sc === 'fault') {
+          const k0 = 1 + Math.floor(rng() * 9), mode = Math.floor(rng() * 3), g = rng() < 0.5 ? 1.25 + 0.55 * rng() : 0.45 + 0.3 * rng();
+          const stuck = v[k0];
+          v = v.map((x, k) => k < k0 ? x : mode === 0 ? stuck : mode === 1 ? x * g + LIM * 0.02 : NOM * 0.02);
+        }
+        parts.push({ v: v.map(x => Math.max(x, NOM * 1e-3)) });
+      }
+      const sl = parts.map(q => (q.v[3] - q.v[0]) / 24), zc = rz(parts.map(q => q.v[3])), zs = rz(sl);
+      nFlag = 0; nRev = 0;
+      parts.forEach((q, i) => {
+        q.flag = Math.max(Math.abs(zc[i]), Math.abs(zs[i])) >= 3.5 || q.v[3] >= 0.8 * LIM;
+        if (!q.flag) return;
+        q.fc = clamp(q.v[3] + Math.max(0, (q.v[3] - q.v[2]) / 12) * 144 * 0.9, 0, YMAX);
+        q.rev = q.fc + ERR * 1.28 >= LIM;
+        nFlag++; if (q.rev) nRev++;
+      });
+    };
+    newBatch();
+    const at = (q, hr) => {
+      let k = 0; while (k < 9 && HRS[k + 1] <= hr) k++;
+      if (k === 9) return q.v[9];
+      const f = (hr - HRS[k]) / (HRS[k + 1] - HRS[k]);
+      return q.v[k] + (q.v[k + 1] - q.v[k]) * f;
+    };
+    return {
+      update(dt) { t += dt; if (t >= T5) { t = 0; newBatch(); } },
+      warm() { t = T3 + 0.1; },
+      draw(ctx, w, h, p) {
+        const m = 6, orange = p.light ? '#c93400' : '#ff9f0a';
+        const ease = x => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
+        const hour = t < T1 ? 24 * (t / T1) : t < T2 ? 24 : 24 + 144 * clamp((t - T2) / (T3 - T2), 0, 1);
+        const screened = t >= T1, fp = screened ? ease((t - T1) / 1.1) : 0;
+        const L = m + 44, R = w - m - 18, T = m + 54, B = h - m - 28;
+        const X = hr => L + (R - L) * hr / 168, Y = v => B - (B - T) * Math.min(v, YMAX) / YMAX;
+        ctx.save();
+        roundRect(ctx, m, m, w - 2 * m, h - 2 * m, 16);
+        ctx.fillStyle = p.fg; ctx.globalAlpha = 0.04; ctx.fill();
+        ctx.globalAlpha = 0.12; ctx.strokeStyle = p.fg; ctx.lineWidth = 1; ctx.stroke();
+        ctx.clip();
+        ctx.font = `11px ${FONT}`; ctx.fillStyle = p.fg; ctx.strokeStyle = p.fg; ctx.lineWidth = 1;
+        for (const v of [0, 25]) {
+          ctx.globalAlpha = 0.08; ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke();
+          ctx.globalAlpha = 0.55; ctx.textAlign = 'right'; ctx.fillText(v ? v + ' µA' : '0', L - 8, Y(v) + 4);
+        }
+        ctx.globalAlpha = 0.5; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(L, Y(LIM)); ctx.lineTo(R, Y(LIM)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.globalAlpha = 0.55; ctx.fillText('Limit', L - 8, Y(LIM) + 4);
+        ctx.textAlign = 'center';
+        for (const hr of HRS) { ctx.globalAlpha = 0.2; ctx.beginPath(); ctx.moveTo(X(hr), B); ctx.lineTo(X(hr), B + 4); ctx.stroke(); }
+        ctx.globalAlpha = 0.55;
+        for (const hr of [0, 24, 168]) ctx.fillText(hr + ' h', X(hr), B + 18);
+        if (screened) {
+          ctx.globalAlpha = 0.45; ctx.strokeStyle = p.link;
+          ctx.beginPath(); ctx.moveTo(X(24), T - 6); ctx.lineTo(X(24), B); ctx.stroke();
+        }
+        if (hour < 168) { ctx.globalAlpha = 0.16; ctx.strokeStyle = p.fg; ctx.beginPath(); ctx.moveTo(X(hour), T - 6); ctx.lineTo(X(hour), B); ctx.stroke(); }
+        const path = q => {
+          ctx.beginPath(); ctx.moveTo(X(0), Y(q.v[0]));
+          for (let k = 1; k < 10 && HRS[k] <= hour; k++) ctx.lineTo(X(HRS[k]), Y(q.v[k]));
+          ctx.lineTo(X(hour), Y(at(q, hour))); ctx.stroke();
+        };
+        ctx.lineJoin = 'round'; ctx.strokeStyle = p.fg; ctx.lineWidth = 1.1; ctx.globalAlpha = 0.24;
+        for (const q of parts) if (!(screened && q.flag)) path(q);
+        if (screened && fp > 0) {
+          const he = 24 + 144 * fp;
+          for (const q of parts) {
+            if (!q.flag) continue;
+            const c = q.rev ? orange : p.link, y0 = q.v[3], y1 = y0 + (q.fc - y0) * fp, e = ERR * fp;
+            ctx.fillStyle = c; ctx.globalAlpha = 0.1;
+            ctx.beginPath(); ctx.moveTo(X(24), Y(y0)); ctx.lineTo(X(he), Y(y1 + e)); ctx.lineTo(X(he), Y(Math.max(0, y1 - e))); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = c; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+            ctx.beginPath(); ctx.moveTo(X(24), Y(y0)); ctx.lineTo(X(he), Y(y1)); ctx.stroke(); ctx.setLineDash([]);
+          }
+        }
+        if (screened) for (const q of parts) {
+          if (!q.flag) continue;
+          const c = q.rev ? orange : p.link;
+          ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 1.7; ctx.globalAlpha = 0.95; path(q);
+          ctx.beginPath(); ctx.arc(X(24), Y(q.v[3]), 2.6, 0, TAU2); ctx.fill();
+        }
+        const fade = t > T4 ? (t - T4) / (T5 - T4) : 0;
+        if (fade > 0) { ctx.globalAlpha = fade; ctx.fillStyle = p.card; ctx.fillRect(m, T - 10, w - 2 * m, h - T); }
+        ctx.restore();
+        ctx.globalAlpha = 1; ctx.fillStyle = p.fg; ctx.textAlign = 'left'; ctx.font = `600 13px ${FONT}`;
+        const head = `Batch B0${batch}  |  ${temp.toFixed(1)} °C  |  ${Math.round(hour)} h`;
+        ctx.fillText(screened ? head + `  |  Flagged ${nFlag}` : head, m + 14, m + 22);
+        if (screened) {
+          ctx.font = `11px ${FONT}`; let x = m + 14;
+          for (const [c, label] of [[p.link, 'Forecast under limit'], [orange, 'Forecast over limit']]) {
+            ctx.globalAlpha = 1; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + 4, m + 38, 3.5, 0, TAU2); ctx.fill();
+            ctx.globalAlpha = 0.7; ctx.fillStyle = p.fg; ctx.fillText(label, x + 13, m + 42);
+            x += 26 + ctx.measureText(label).width;
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+    };
+  }
+
+  return { mount, contactField, contactGlow, forestFire, phantomRing, evolveRing, darwinCircuit, cpcsDoor, liquidState, burnIn };
 })();
 
 export default Sims;

@@ -56,6 +56,17 @@
     return { destroy: () => io.disconnect() };
   }
 
+  function immerse(node) {
+    const c = document.createElement('canvas');
+    c.setAttribute('aria-hidden', 'true');
+    c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;border-radius:inherit;z-index:-1';
+    node.style.isolation = 'isolate';
+    if (getComputedStyle(node).position === 'static') node.style.position = 'relative';
+    node.prepend(c);
+    const sim = Sims.mount(c, Sims.contactGlow(), { reduced });
+    return { destroy() { sim.stop(); c.remove(); } };
+  }
+
   onMount(() => {
     let t = 'dark';
     try { t = localStorage.getItem('sr-theme') || 'dark'; } catch {}
@@ -114,6 +125,7 @@
         role="button"
         tabindex="0"
         use:reveal
+        use:immerse
         onclick={() => openProject(featured)}
         onkeydown={activate(() => openProject(featured))}
       >
@@ -135,6 +147,7 @@
             role="button"
             tabindex="0"
             use:reveal
+            use:immerse
             onclick={() => openProject(p)}
             onkeydown={activate(() => openProject(p))}
           >
@@ -154,7 +167,7 @@
     <section id="research" class="block">
       <h2 class="headline">Research</h2>
       {#each research as r}
-        <div class="tile research" use:reveal>
+        <div class="tile research" use:reveal use:immerse>
           <span class="eyebrow">{r.status}</span>
           <h3>{r.title}</h3>
           <p>{r.desc}</p>
@@ -171,6 +184,7 @@
             role="button"
             tabindex="0"
             use:reveal
+            use:immerse
             onclick={() => openExp(e)}
             onkeydown={activate(() => openExp(e))}
           >
