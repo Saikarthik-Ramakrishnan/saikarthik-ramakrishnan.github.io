@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { fileURLToPath } from 'node:url';
 
-// Main portfolio is the static page in public/index.html; the Svelte app lives at /alt/.
 export default defineConfig({
   plugins: [svelte()],
-  build: { rollupOptions: { input: 'svelte/index.html' } },
+  build: { rollupOptions: { input: fileURLToPath(new URL('./svelte/index.html', import.meta.url)) } },
 });
